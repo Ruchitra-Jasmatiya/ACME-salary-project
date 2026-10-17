@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: acme-salary
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 3001
+      # Free tier has an ephemeral disk: the demo re-seeds synthetic data on each boot.
+      - key: DB_PATH
+        value: /data/acme.db

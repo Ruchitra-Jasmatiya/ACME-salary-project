@@ -10,7 +10,7 @@ Replace the HR team's Excel files with a web app so the HR Manager can maintain 
 1. **Employee directory**: server-side paginated table (10k rows), search by name/email, filter by country, department, job title, sort by any column.
 2. **Create / edit / delete employee**: name, email, country, department, job title, salary, currency, hire date. Validation (required fields, positive salary, valid currency, unique email).
 3. **Salary insights dashboard**: headcount, total payroll and min / median / average / max salary, sliceable by country, department and job title. All figures are normalized to one reporting currency (USD) so multi-country numbers are comparable; native currency is still stored and shown.
-4. **Pay outlier view**: people paid far above or below their job title's median (surfaces inequity and data-entry errors).
+4. **Pay outlier view**: people paid ≥1.5× or ≤0.67× the median of peers with the same job title *in the same country* (peers in other countries are excluded because local pay levels differ). Surfaces inequity and data-entry errors.
 5. **Seed script**: deterministic generation of 10,000 realistic employees.
 6. **Tests** for validation, repository queries, analytics math and the HTTP API.
 
@@ -27,8 +27,9 @@ Replace the HR team's Excel files with a web app so the HR Manager can maintain 
 
 ## Key decisions
 - **SQLite**: 10k rows is tiny, zero ops, easy for reviewers to run. Repository layer isolates SQL so Postgres is a swap.
-- **Aggregation in SQL, pagination on the server**: the browser never receives 10k rows.
-- **Median computed in the app layer from SQL-sorted values**, since SQLite lacks a median function.
+- **Pagination, filtering, sorting and currency conversion in SQL**: the browser never receives 10k rows.
+- **Statistics (median etc.) reduced in the app layer from SQL-sorted values**, since SQLite lacks a median function. Fine at 10k rows (milliseconds); see docs/DESIGN.md for the scale-up path.
+- **Node built-ins only on the backend** (`node:sqlite`, `node:http`, `node:test`): no install step, minimal supply-chain surface for a salary system. Trade-off: a hand-rolled router instead of Express.
 
 ## Success criteria
 - Directory loads and filters in under 200 ms at 10k rows.
